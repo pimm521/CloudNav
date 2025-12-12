@@ -261,7 +261,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     
     .status { margin-top: 12px; font-size: 13px; text-align: center; color: #64748b; min-height: 20px; font-weight: 500; }
     
-    .page-info { font-size: 13px; color: #475569; margin-bottom: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: #ffffff; padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .input-group { margin-bottom: 16px; background: #ffffff; padding: 8px 12px; border-radius: 8px; display: flex; align-items: center; border: 1px solid #e2e8f0; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .input-group:focus-within { border-color: #3b82f6; ring: 2px solid #3b82f6; }
+    
+    #page-icon { width: 16px; height: 16px; margin-right: 8px; border-radius: 2px; flex-shrink: 0; }
+    
+    .page-input { border: none; outline: none; width: 100%; font-size: 13px; color: #1e293b; background: transparent; font-family: inherit; }
+    .page-input::placeholder { color: #94a3b8; }
     
     select { width: 100%; padding: 8px 12px; margin-bottom: 16px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; color: #334155; font-size: 14px; outline: none; appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; }
     select:focus { border-color: #3b82f6; ring: 2px solid #3b82f6; }
@@ -270,7 +276,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 <body>
   <h3>${localSiteSettings.navTitle || 'CloudNav'}</h3>
   
-  <div class="page-info" id="page-title">Loading...</div>
+  <div class="input-group">
+      <img id="page-icon" style="display:none;" />
+      <input type="text" id="page-title" class="page-input" placeholder="Loading..." />
+  </div>
   
   <select id="category-select">
      <option value="">加载分类中...</option>
@@ -294,18 +303,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   const statusEl = document.getElementById('status');
   const saveBtn = document.getElementById('save-btn');
   const catSelect = document.getElementById('category-select');
-  const titleEl = document.getElementById('page-title');
+  const titleInput = document.getElementById('page-title');
+  const iconImg = document.getElementById('page-icon');
 
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
     // 1. Render Page Info
-    titleEl.textContent = tab.title;
+    titleInput.value = tab.title;
     if (tab.favIconUrl) {
-       const img = document.createElement('img');
-       img.src = tab.favIconUrl;
-       img.style.cssText = 'width:16px;height:16px;margin-right:8px;vertical-align:middle;border-radius:2px;';
-       titleEl.prepend(img);
+       iconImg.src = tab.favIconUrl;
+       iconImg.style.display = 'block';
     }
 
     // 2. Fetch Categories & Check Duplicates
@@ -390,7 +398,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             'x-auth-password': CONFIG.password
           },
           body: JSON.stringify({
-            title: tab.title,
+            title: titleInput.value, // Changed to use input value
             url: tab.url,
             icon: tab.favIconUrl || '',
             categoryId: catSelect.value
